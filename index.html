@@ -193,6 +193,7 @@ body::before {
       <div class="total-bar-wrap">
         <div class="total-bar-fill" id="totalBar" style="width:0%"></div>
       </div>
+      <div class="data-source" id="mrEstimate" style="margin-bottom:4px"></div>
       <div class="data-source" id="dataSource">Source: <span>loading...</span></div>
       <div class="io-btns">
         <button class="io-btn" onclick="exportData()">Export</button>
@@ -347,6 +348,20 @@ const FALLBACK = {
   ]
 };
 
+// ─── MR XP per category ──────────────────────────────────────────────────────
+const MR_XP = { Warframes: 6000, Necramech: 6000, Archwing: 6000, Companion: 6000, Robotic: 6000 };
+function getMasteredXP() {
+  let xp = 0;
+  for (const [k, items] of Object.entries(DATA)) {
+    const perItem = MR_XP[k] || 3000;
+    xp += items.filter(i => mastered[i.id]).length * perItem;
+  }
+  return xp;
+}
+function xpToMR(xp) {
+  return Math.floor((-1 + Math.sqrt(1 + 4 * xp / 750)) / 2);
+}
+
 // ─── Lich element config ─────────────────────────────────────────────────────
 const LICH_ELEMENTS = ['Heat','Cold','Electric','Toxin','Radiation','Magnetic','Viral','Corrosive','Blast','Gas','Slash','Puncture','Impact'];
 
@@ -366,6 +381,8 @@ const CATS = [
   { key: 'Companion',  label: 'Companions',  apiCat: 'Companion' },
   { key: 'Robotic',    label: 'Robotic',     apiCat: 'Sentinel' },
   { key: 'Amp',        label: 'Amp',         apiCat: 'Amp' },
+  { key: 'kuva',       label: 'Kuva',        apiCat: null, prefix: 'Kuva ' },
+  { key: 'tenet',      label: 'Tenet',       apiCat: null, prefix: 'Tenet ' },
   { key: 'lich',       label: 'Lich Vault',  apiCat: null, lichView: true },
 ];
 
@@ -482,6 +499,15 @@ function onReady() {
 
 // ─── Nav ──────────────────────────────────────────────────────────────────────
 function getItems(catKey) {
+  const cat = CATS.find(c => c.key === catKey);
+  if (cat && cat.prefix) {
+    const all = Object.entries(DATA).flatMap(([k, items]) => items.map(i => ({ ...i, cat: k })));
+    const seen = new Set();
+    return all.filter(i => {
+      if (!i.name.startsWith(cat.prefix) || seen.has(i.id)) return false;
+      seen.add(i.id); return true;
+    });
+  }
   if (catKey === 'all') return Object.entries(DATA).flatMap(([k, items]) => items.map(i => ({ ...i, cat: k })));
   return (DATA[catKey] || []).map(i => ({ ...i, cat: catKey }));
 }
@@ -510,9 +536,15 @@ function buildNav() {
 function updateTotal() {
   const all = getItems('all');
   const done = all.filter(i => mastered[i.id]).length;
+  const missing = all.length - done;
   const pct = all.length ? Math.round(done / all.length * 100) : 0;
   document.getElementById('totalBar').style.width = pct + '%';
   document.getElementById('totalLabel').textContent = pct + '%';
+  document.title = missing > 0 ? `(${missing} missing) Warframe Mastery` : 'Warframe Mastery ✓';
+  const xp = getMasteredXP();
+  const mr = xpToMR(xp);
+  const nextXP = 750 * (mr + 1) * (mr + 2);
+  document.getElementById('mrEstimate').textContent = `~MR ${mr} (${xp.toLocaleString()} XP · ${(nextXP - xp).toLocaleString()} to next)`;
 }
 
 // ─── Lich helpers ─────────────────────────────────────────────────────────────
@@ -557,7 +589,8 @@ function renderLich() {
 function renderItems() {
   if (activeCat === 'lich') { renderLich(); return; }
   const search = document.getElementById('searchInput').value.toLowerCase().trim();
-  let items = getItems(activeCat);
+  // Global search: pull from all categories when a search term is active
+  let items = getItems(search ? 'all' : activeCat);
   if (search) items = items.filter(i => i.name.toLowerCase().includes(search));
   if (activeFilter === 'mastered')   items = items.filter(i =>  mastered[i.id]);
   if (activeFilter === 'unmastered') items = items.filter(i => !mastered[i.id]);
@@ -567,9 +600,11 @@ function renderItems() {
     return;
   }
 
-  if (activeCat === 'all' && !search) {
+  const showGrouped = activeCat === 'all' || search;
+  if (showGrouped) {
     let html = '';
     for (const cat of CATS.slice(1)) {
+      if (cat.prefix || cat.lichView) continue; // skip virtual views in grouped display
       const catItems = items.filter(i => i.cat === cat.key);
       if (!catItems.length) continue;
       const done = catItems.filter(i => mastered[i.id]).length;
@@ -580,7 +615,7 @@ function renderItems() {
       </div>
       <div class="item-grid">${catItems.map(cardHtml).join('')}</div>`;
     }
-    document.getElementById('content').innerHTML = html;
+    document.getElementById('content').innerHTML = html || '<div class="empty-state">No items found.</div>';
   } else {
     const cat = CATS.find(c => c.key === activeCat) || { label: 'Results' };
     const done = items.filter(i => mastered[i.id]).length;
