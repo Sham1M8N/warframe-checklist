@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warframe Mastery Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #c8a951;
+  --gold-bright: #f0cc6e;
+  --teal: #4ecdc4;
+  --teal-dim: #2a7a76;
+  --bg: #080c10;
+  --bg2: #0d1219;
+  --bg3: #111820;
+  --text: #c8d4e0;
+  --text-dim: #6b7f94;
+  --border: rgba(200,169,81,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 16px; min-height: 100vh; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(78,205,196,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(78,205,196,0.025) 1px, transparent 1px);
+  background-size: 36px 36px; pointer-events: none; z-index: 0;
+}
+.app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 230px; flex-shrink: 0; background: var(--bg2);
+  border-right: 1px solid var(--border); padding: 24px 0;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.sidebar-logo h1 { font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 900; letter-spacing: 3px; color: var(--gold-bright); line-height: 1.4; }
+.sidebar-logo p { font-size: 11px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+.nav-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 20px; cursor: pointer; transition: all 0.15s;
+  border-left: 2px solid transparent; font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-dim);
+}
+.nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+.nav-item.active { color: var(--gold-bright); border-left-color: var(--gold); background: rgba(200,169,81,0.05); }
+.nav-badge { font-family: 'Orbitron', monospace; font-size: 10px; padding: 2px 6px; background: rgba(255,255,255,0.05); border-radius: 2px; color: var(--text-dim); white-space: nowrap; }
+.nav-item.active .nav-badge { background: rgba(200,169,81,0.15); color: var(--gold); }
+
+.sidebar-footer { margin-top: auto; padding: 20px; border-top: 1px solid var(--border); }
+.total-bar-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.total-bar-wrap { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; margin-bottom: 10px; }
+.total-bar-fill { height: 100%; background: linear-gradient(90deg, var(--teal-dim), var(--teal)); border-radius: 2px; transition: width 0.4s ease; box-shadow: 0 0 8px rgba(78,205,196,0.4); }
+.data-source { font-size: 10px; letter-spacing: 1px; color: var(--text-dim); opacity: 0.6; }
+.data-source span { color: var(--teal); }
+
+/* MAIN */
+.main { flex: 1; padding: 32px; min-width: 0; }
+.top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.search-wrap { flex: 1; min-width: 200px; position: relative; }
+.search-wrap input {
+  width: 100%; background: var(--bg2); border: 1px solid rgba(255,255,255,0.07); border-radius: 3px;
+  padding: 9px 14px 9px 36px; color: var(--text); font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 1px; outline: none; transition: border-color 0.2s;
+}
+.search-wrap input:focus { border-color: rgba(78,205,196,0.3); }
+.search-wrap input::placeholder { color: var(--text-dim); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 13px; }
+
+.filter-btns { display: flex; gap: 6px; }
+.filter-btn {
+  font-family: 'Rajdhani', sans-serif; font-size: 12px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; padding: 8px 14px;
+  border-radius: 2px; border: 1px solid rgba(255,255,255,0.08);
+  background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+}
+.filter-btn:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+.filter-btn.active { border-color: var(--teal-dim); color: var(--teal); background: rgba(78,205,196,0.07); }
+
+.cat-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.cat-title { font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+.cat-divider { flex: 1; height: 1px; background: var(--border); }
+.cat-stats { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; white-space: nowrap; }
+
+.item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 6px; margin-bottom: 36px; }
+.item-card {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--bg2); border: 1px solid rgba(255,255,255,0.04); border-radius: 3px;
+  cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+}
+.item-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: transparent; transition: background 0.15s; }
+.item-card:hover { background: var(--bg3); border-color: rgba(255,255,255,0.07); }
+.item-card.mastered { background: rgba(78,205,196,0.04); border-color: rgba(78,205,196,0.1); }
+.item-card.mastered::before { background: var(--teal); }
+
+.cb { width: 15px; height: 15px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.mastered .cb { background: var(--teal); border-color: var(--teal); }
+.cb svg { width: 9px; height: 9px; opacity: 0; transition: opacity 0.15s; }
+.mastered .cb svg { opacity: 1; }
+.item-name { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.15s; flex: 1; }
+.mastered .item-name { color: var(--text-dim); }
+
+.vaulted-badge {
+  font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 1px;
+  padding: 1px 4px; border-radius: 2px; flex-shrink: 0; white-space: nowrap;
+  background: rgba(200,169,81,0.08); border: 1px solid rgba(200,169,81,0.3); color: var(--gold);
+}
+
+/* Loading */
+.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 0; gap: 16px; }
+.spinner { width: 32px; height: 32px; border: 2px solid rgba(78,205,196,0.1); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 3px; color: var(--text-dim); animation: pulse 1.5s ease infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+.notice { font-size: 12px; letter-spacing: 1px; color: var(--text-dim); padding: 8px 12px; background: rgba(78,205,196,0.05); border: 1px solid rgba(78,205,196,0.1); border-radius: 3px; margin-bottom: 20px; }
+.notice b { color: var(--teal); }
+.empty-state { text-align: center; padding: 60px 0; color: var(--text-dim); font-size: 14px; }
+
+/* Kuva / Tenet badges */
+.kuva-badge {
+  font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 1px;
+  padding: 1px 4px; border-radius: 2px; flex-shrink: 0; white-space: nowrap;
+  background: rgba(220,80,40,0.1); border: 1px solid rgba(220,80,40,0.35); color: #e05530;
+}
+.tenet-badge {
+  font-family: 'Orbitron', monospace; font-size: 8px; letter-spacing: 1px;
+  padding: 1px 4px; border-radius: 2px; flex-shrink: 0; white-space: nowrap;
+  background: rgba(120,80,220,0.1); border: 1px solid rgba(140,90,240,0.35); color: #a070f0;
+}
+
+/* Export / Import */
+.io-btns { display: flex; gap: 6px; margin-top: 10px; }
+.io-btn {
+  flex: 1; font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase; padding: 6px 8px;
+  border-radius: 2px; border: 1px solid rgba(255,255,255,0.08);
+  background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.15s; text-align: center;
+}
+.io-btn:hover { border-color: rgba(78,205,196,0.3); color: var(--teal); }
+
+/* Lich element tracker */
+.lich-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 36px; }
+.lich-row {
+  background: var(--bg2); border: 1px solid rgba(255,255,255,0.04); border-radius: 3px;
+  padding: 10px 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.lich-name { font-size: 13px; font-weight: 600; color: var(--text); min-width: 160px; }
+.elem-wrap { display: flex; gap: 5px; flex-wrap: wrap; }
+.elem-dot {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  padding: 2px 6px; border-radius: 2px; cursor: pointer; transition: all 0.15s; user-select: none;
+  border: 1px solid rgba(255,255,255,0.08); color: var(--text-dim); background: transparent;
+}
+.elem-dot:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+.elem-dot.owned { border-color: var(--teal-dim); color: var(--teal); background: rgba(78,205,196,0.08); }
+
+/* Mobile */
+.hamburger {
+  display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+  width: 36px; height: 36px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 3px; cursor: pointer; align-items: center; justify-content: center; flex-direction: column; gap: 4px;
+}
+.hamburger span { display: block; width: 16px; height: 2px; background: var(--text-dim); border-radius: 1px; }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; }
+@media (max-width: 640px) {
+  .sidebar { position: fixed; left: -230px; top: 0; height: 100vh; z-index: 100; transition: left 0.25s ease; }
+  .sidebar.open { left: 0; }
+  .sidebar-overlay.open { display: block; }
+  .hamburger { display: flex; }
+  .main { padding: 16px; padding-top: 56px; }
+}
+</style>
+</head>
+<body>
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h1>MASTERY<br>CHECKLIST</h1>
+      <p>Warframe</p>
+    </div>
+    <div id="navItems"></div>
+    <div class="sidebar-footer">
+      <div class="total-bar-label">
+        <span>Total Progress</span>
+        <span id="totalLabel">0%</span>
+      </div>
+      <div class="total-bar-wrap">
+        <div class="total-bar-fill" id="totalBar" style="width:0%"></div>
+      </div>
+      <div class="data-source" id="dataSource">Source: <span>loading...</span></div>
+      <div class="io-btns">
+        <button class="io-btn" onclick="exportData()">Export</button>
+        <button class="io-btn" onclick="document.getElementById('importFile').click()">Import</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="top-bar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Search items..." oninput="renderItems()">
+      </div>
+      <div class="filter-btns">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('unmastered',this)">Missing</button>
+        <button class="filter-btn" onclick="setFilter('mastered',this)">Mastered</button>
+      </div>
+    </div>
+    <div id="notice"></div>
+    <div id="content">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <div class="loading-text">Connecting to Lotus...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ─── FALLBACK DATA (hardcoded, always available) ───────────────────────────
+const FALLBACK = {
+  Warframes: [
+    "Ash","Ash Prime","Atlas","Atlas Prime","Banshee","Banshee Prime",
+    "Baruuk","Baruuk Prime","Caliban","Chroma","Chroma Prime","Citrine",
+    "Dagath","Dante","Ember","Ember Prime","Equinox","Equinox Prime",
+    "Excalibur","Excalibur Prime","Excalibur Umbra","Frost","Frost Prime",
+    "Gara","Gara Prime","Garuda","Garuda Prime","Gauss","Gauss Prime",
+    "Grendel","Grendel Prime","Gyre","Harrow","Harrow Prime",
+    "Hildryn","Hildryn Prime","Hydroid","Hydroid Prime",
+    "Inaros","Inaros Prime","Ivara","Ivara Prime",
+    "Khora","Khora Prime","Koumei","Kullervo","Lavos",
+    "Limbo","Limbo Prime","Loki","Loki Prime","Mag","Mag Prime",
+    "Mesa","Mesa Prime","Mirage","Mirage Prime","Nekros","Nekros Prime",
+    "Nezha","Nezha Prime","Nidus","Nidus Prime","Nova","Nova Prime",
+    "Nyx","Nyx Prime","Oberon","Oberon Prime","Octavia","Octavia Prime",
+    "Protea","Protea Prime","Qorvex","Revenant","Revenant Prime",
+    "Rhino","Rhino Prime","Saryn","Saryn Prime","Sevagoth","Sevagoth Prime",
+    "Styanax","Titania","Titania Prime","Trinity","Trinity Prime",
+    "Valkyr","Valkyr Prime","Vauban","Vauban Prime","Volt","Volt Prime",
+    "Voruna","Wisp","Wisp Prime","Wukong","Wukong Prime",
+    "Xaku","Yareli","Zephyr","Zephyr Prime"
+  ],
+  Primary: [
+    "Acceltra","Acceltra Prime","Amprex","Arca Plasmor","Argonak",
+    "Astilla","Astilla Prime","Attica","Baza","Baza Prime",
+    "Boltor","Boltor Prime","Bramma","Braton","Braton Prime","Braton Vandal",
+    "Bubonico","Buzlok","Cedo","Cernos","Cernos Prime","Corinth","Corinth Prime",
+    "Daikyu","Dread","Envoy","Ferrox","Fulmin","Grinlok",
+    "Grakata","Grakata Prime","Harpak","Hek","Ignis","Ignis Wraith",
+    "Javlok","Komorex","Kuva Bramma","Kuva Chakkhurr","Kuva Hek",
+    "Kuva Karak","Kuva Kohm","Kuva Ogris","Kuva Quartakk","Kuva Tonkor","Kuva Zarr",
+    "Lanka","Latron","Latron Prime","Latron Wraith","Lenz","Mausolon",
+    "Nagantaka","Nagantaka Prime","Nataruk","Ogris","Opticor","Opticor Vandal",
+    "Panthera","Panthera Prime","Paris","Paris Prime","Phenmor",
+    "Prisma Grakata","Prisma Grinlok","Prisma Tetra","Proboscis Cernos",
+    "Quellor","Quanta","Quanta Vandal","Rubico","Rubico Prime",
+    "Shedu","Sibear","Simulor","Snipetron","Snipetron Vandal",
+    "Soma","Soma Prime","Sporothrix","Stahlta","Strun","Strun Wraith",
+    "Supra","Supra Vandal","Synoid Simulor",
+    "Tenet Arca Plasmor","Tenet Envoy","Tenet Flux Rifle","Tenet Glaxion","Tenet Spirex",
+    "Tetra","Tiberon","Tiberon Prime","Tonkor","Trumna",
+    "Vectis","Vectis Prime","Veldt","Vermisplicer",
+    "Vulkar","Vulkar Wraith","Zarr","Zenith","Zhuge","Zhuge Prime"
+  ],
+  Secondary: [
+    "Akvasto","Akvasto Prime","Akbolto","Akbolto Prime","Akbronco","Akbronco Prime",
+    "Akjagara","Akjagara Prime","Aksomati","Aksomati Prime",
+    "Akstiletto","Akstiletto Prime","Aklex","Aklex Prime","Aklato",
+    "Akmagnus","Akmagnus Prime","Ballistica","Ballistica Prime",
+    "Brakk","Bronco","Bronco Prime","Carmine Penta",
+    "Cyanex","Cycron","Despair","Detron","Dex Furis","Embolist",
+    "Epitaph","Euphona Prime","Exergis","Furis","Fusilai",
+    "Gammacor","Grabfist","Gremlins","Hikou","Hikou Prime",
+    "Knell","Knell Prime","Kompressa","Kraken","Kuva Brakk",
+    "Kuva Nukor","Kuva Seer","Laetum","Lato","Lato Prime","Lato Vandal",
+    "Lex","Lex Prime","Magnus","Magnus Prime","Mara Detron","Marelok",
+    "Nukor","Ocucor","Pandero","Pandero Prime","Plinx",
+    "Prisma Angstrum","Prisma Twin Gremlins","Pyrana","Pyrana Prime",
+    "Seer","Sicarus","Sicarus Prime","Sonicor",
+    "Spira","Spira Prime","Staticor","Stubba","Stug","Talons",
+    "Tenet Cycron","Tenet Diplos","Tenet Exec","Tenet Spirex",
+    "Twin Grakatas","Twin Kohmak","Twin Rogga",
+    "Twin Vipers","Twin Vipers Wraith","Vasto","Vasto Prime",
+    "Velox","Zakti","Zakti Prime","Zylok"
+  ],
+  Melee: [
+    "Ack & Brunt","Arca Titron","Boltace","Bo","Bo Prime",
+    "Broken Scepter","Broken War","Caustacyst","Cerata","Ceramic Dagger",
+    "Cobra & Crane","Dakra Prime","Dark Dagger","Dark Sword","Dark Split-Sword",
+    "Dex Dakra","Dragon Nikana","Dual Cleavers","Dual Ether",
+    "Dual Kamas","Dual Kamas Prime","Dual Keres","Dual Raza","Dual Skana","Dual Zoren",
+    "Ether Daggers","Ether Reaper","Ether Sword","Falcor","Fang","Fang Prime",
+    "Fragor","Fragor Prime","Glaive","Glaive Prime","Gram","Gram Prime",
+    "Guandao","Guandao Prime","Gunsen","Halikar","Halikar Wraith","Hate",
+    "Heat Dagger","Heat Sword","Hespar","Hirudo","Jaw Sword","Jat Kittag","Jat Kusar",
+    "Karyst","Karyst Prime","Kaszas","Kestrel","Kogake","Kogake Prime",
+    "Korrudo","Krohkur","Kuva Shildeg","Lacera","Lesion",
+    "Machete","Machete Wraith","Mios","Mire","Nami Skyla","Nami Skyla Prime","Nami Solo",
+    "Nikana","Nikana Prime","Ninkondi","Ninkondi Prime","Obex","Ohma","Orvius",
+    "Orthos","Orthos Prime","Paracesis","Pathocyst","Pennant","Plasma Sword",
+    "Prisma Dual Cleavers","Prisma Obex","Prisma Skana",
+    "Pupacyst","Reaper Prime","Ripkas","Sawtooth",
+    "Scindo","Scindo Prime","Serro","Shaku",
+    "Silva & Aegis","Silva & Aegis Prime","Sigma & Octantis",
+    "Skana","Skana Prime","Skiajati","Stropha","Syam",
+    "Synoid Heliocor","Telos Boltace",
+    "Tenet Agendus","Tenet Exec","Tenet Grigori","Tenet Livia",
+    "Tipedo","Tipedo Prime","Tonbo","Twin Basolk","Twin Krohkur",
+    "Vaykor Sydon","Venka","Venka Prime","Volnus","Volnus Prime",
+    "War","Wolf Sledge","Xoris","Zenistar"
+  ],
+  Archwing: ["Amesha","Elytron","Itzal","Odonata","Odonata Prime"],
+  "Arch-Gun": [
+    "Ayanga","Corvas","Cortege","Dual Decurion","Fluctus",
+    "Imperator","Imperator Vandal","Larkspur","Larkspur Prime",
+    "Mausolon","Morgha","Phaedra","Velocitus"
+  ],
+  "Arch-Melee": ["Centaur","Cyngas","Kaszas","Knux","Onorix","Prisma Veritux","Veritux"],
+  Companion: [
+    "Adarza Kavat","Charger","Huras Kubrow","Medjay Predasite",
+    "Panzer Vulpaphyla","Predasite","Raksa Kubrow","Sahasa Kubrow",
+    "Smeeta Kavat","Sunika Kubrow","Vasca Kavat","Vizier Predasite","Vulpaphyla"
+  ],
+  Robotic: [
+    "Carrier","Carrier Prime","Diriga","Djinn","Expressa",
+    "Helios","Helios Prime","Nautilus","Nautilus Prime",
+    "Oxylus","Prisma Shade","Shade","Shade Prime",
+    "Taxon","Tishu","Wyrm","Wyrm Prime"
+  ],
+  Necramech: ["Bonewidow","Voidrig"],
+  Zaw: [
+    "Balla","Cyath","Dehtat","Dokrahm","Kronsh","Mewan",
+    "Ooltha","Plague Kripath","Rabvee","Sepfahn","Tip"
+  ],
+  Kitgun: ["Catchmoon","Gaze","Rattleguts","Sporelacer","Tombfinger"],
+  Amp: [
+    "Mote Amp","Raplak","Phahd","Shwaak","Granmu",
+    "Lega","Klebrik","Certus","Propa"
+  ]
+};
+
+// ─── Lich element config ─────────────────────────────────────────────────────
+const LICH_ELEMENTS = ['Heat','Cold','Electric','Toxin','Radiation','Magnetic','Viral','Corrosive','Blast','Gas','Slash','Puncture','Impact'];
+
+// ─── Category config ─────────────────────────────────────────────────────────
+const CATS = [
+  { key: 'all',        label: 'All Items',   apiCat: null },
+  { key: 'Warframes',  label: 'Warframes',   apiCat: 'Warframes' },
+  { key: 'Necramech',  label: 'Necramech',   apiCat: 'Warframes', uMatch: 'necramech' },
+  { key: 'Primary',    label: 'Primary',     apiCat: 'Primary' },
+  { key: 'Secondary',  label: 'Secondary',   apiCat: 'Secondary' },
+  { key: 'Kitgun',     label: 'Kitgun',      apiCat: 'Secondary', uMatch: 'kitgun' },
+  { key: 'Melee',      label: 'Melee',       apiCat: 'Melee' },
+  { key: 'Zaw',        label: 'Zaw',         apiCat: 'Melee',     uMatch: '/zaw/' },
+  { key: 'Archwing',   label: 'Archwing',    apiCat: 'Archwing' },
+  { key: 'Arch-Gun',   label: 'Arch-Gun',    apiCat: 'Arch-Gun' },
+  { key: 'Arch-Melee', label: 'Arch-Melee',  apiCat: 'Arch-Melee' },
+  { key: 'Companion',  label: 'Companions',  apiCat: 'Companion' },
+  { key: 'Robotic',    label: 'Robotic',     apiCat: 'Sentinel' },
+  { key: 'Amp',        label: 'Amp',         apiCat: 'Amp' },
+  { key: 'lich',       label: 'Lich Vault',  apiCat: null, lichView: true },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let DATA = {};           // populated after load
+let dataSource = 'fallback';
+let mastered = JSON.parse(localStorage.getItem('wf_mastery3') || '{}');
+let lichData = JSON.parse(localStorage.getItem('wf_lich') || '{}');
+let activeCat = 'all';
+let activeFilter = 'all';
+
+// ─── Load data ────────────────────────────────────────────────────────────────
+async function loadData() {
+  // Check cache first (24h)
+  try {
+    const cached = localStorage.getItem('wf_api_cache');
+    const cachedTime = parseInt(localStorage.getItem('wf_api_cache_time') || '0');
+    if (cached && Date.now() - cachedTime < 86400000) {
+      DATA = JSON.parse(cached);
+      dataSource = 'api (cached)';
+      onReady();
+      return;
+    }
+  } catch(e) {}
+
+  // Try API
+  try {
+    const res = await Promise.race([
+      fetch('https://api.warframestat.us/items?only=name,category,uniqueName,vaulted'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+    ]);
+    if (!res.ok) throw new Error('bad response');
+    const raw = await res.json();
+    DATA = processApiData(raw);
+    localStorage.setItem('wf_api_cache', JSON.stringify(DATA));
+    localStorage.setItem('wf_api_cache_time', Date.now().toString());
+    dataSource = 'api (live)';
+    onReady();
+  } catch(e) {
+    // Fallback to hardcoded
+    DATA = buildFromFallback();
+    dataSource = 'offline (built-in)';
+    document.getElementById('notice').innerHTML = `
+      <div class="notice">
+        <b>Offline mode</b> — Could not reach the Warframe API. Using built-in data. 
+        Open via a local server (python -m http.server) or host online for live API data.
+      </div>`;
+    onReady();
+  }
+}
+
+// Convert raw API array → { categoryKey: [{name, id, vaulted}] }
+function processApiData(raw) {
+  const skipWords = ['Blueprint','Neuroptics','Chassis','Systems','Barrel','Receiver',
+    'Stock','Blade','Hilt','Gauntlet','Carapace','Cerebrum','Pouch','Guard',
+    'Grip','String','Lower Limb','Upper Limb','Disc','Handle','Ornament','Buckle','Band',
+    'Collar','Feathers','Wings','Tail','Mane'];
+
+  // Build lookup: apiCat → [categoryEntry], sub-categories (with uMatch) first
+  const byApiCat = {};
+  for (const c of CATS.slice(1)) {
+    if (!c.apiCat) continue;
+    if (!byApiCat[c.apiCat]) byApiCat[c.apiCat] = [];
+    byApiCat[c.apiCat].push(c);
+  }
+  for (const list of Object.values(byApiCat)) {
+    list.sort((a, b) => (b.uMatch ? 1 : 0) - (a.uMatch ? 1 : 0));
+  }
+
+  const out = {};
+  CATS.slice(1).forEach(c => out[c.key] = []);
+  const seen = new Set();
+
+  for (const item of raw) {
+    const candidates = byApiCat[item.category];
+    if (!candidates) continue;
+    if (!item.name || item.name.trim() === '') continue;
+    if (skipWords.some(w => item.name.includes(w))) continue;
+    const nameKey = item.name.toLowerCase();
+    if (seen.has(nameKey)) continue;
+    seen.add(nameKey);
+
+    const uLower = (item.uniqueName || '').toLowerCase();
+    // Sub-categories checked first (they have uMatch), then parent category
+    const cat = candidates.find(c => c.uMatch ? uLower.includes(c.uMatch.toLowerCase()) : true);
+    if (!cat) continue;
+    out[cat.key].push({ name: item.name, id: item.uniqueName || item.name, vaulted: item.vaulted === true });
+  }
+
+  // If API returned nothing for a category, use fallback data
+  CATS.slice(1).forEach(c => {
+    if (out[c.key].length === 0 && FALLBACK[c.key]) {
+      out[c.key] = FALLBACK[c.key].map(name => ({ name, id: name, vaulted: false }));
+    }
+  });
+
+  Object.keys(out).forEach(k => out[k].sort((a, b) => a.name.localeCompare(b.name)));
+  return out;
+}
+
+function buildFromFallback() {
+  const out = {};
+  CATS.slice(1).forEach(c => {
+    out[c.key] = (FALLBACK[c.key] || []).map(name => ({ name, id: name, vaulted: false }));
+  });
+  return out;
+}
+
+function onReady() {
+  document.getElementById('dataSource').innerHTML = `Source: <span>${dataSource}</span>`;
+  buildNav();
+  renderItems();
+}
+
+// ─── Nav ──────────────────────────────────────────────────────────────────────
+function getItems(catKey) {
+  if (catKey === 'all') return Object.entries(DATA).flatMap(([k, items]) => items.map(i => ({ ...i, cat: k })));
+  return (DATA[catKey] || []).map(i => ({ ...i, cat: catKey }));
+}
+
+function buildNav() {
+  document.getElementById('navItems').innerHTML = CATS.map(cat => {
+    let badge = '';
+    if (cat.lichView) {
+      const lichWeapons = getLichWeapons();
+      const total = lichWeapons.length * LICH_ELEMENTS.length;
+      const owned = lichWeapons.reduce((sum, w) => sum + (lichData[w] ? Object.values(lichData[w]).filter(Boolean).length : 0), 0);
+      badge = `${owned}/${total}`;
+    } else {
+      const items = getItems(cat.key);
+      const done = items.filter(i => mastered[i.id]).length;
+      badge = `${done}/${items.length}`;
+    }
+    return `<div class="nav-item ${activeCat === cat.key ? 'active' : ''}" onclick="setCategory('${cat.key}')">
+      <span>${cat.label}</span>
+      <span class="nav-badge">${badge}</span>
+    </div>`;
+  }).join('');
+  updateTotal();
+}
+
+function updateTotal() {
+  const all = getItems('all');
+  const done = all.filter(i => mastered[i.id]).length;
+  const pct = all.length ? Math.round(done / all.length * 100) : 0;
+  document.getElementById('totalBar').style.width = pct + '%';
+  document.getElementById('totalLabel').textContent = pct + '%';
+}
+
+// ─── Lich helpers ─────────────────────────────────────────────────────────────
+function getLichWeapons() {
+  return Object.values(DATA).flat()
+    .filter(i => i.name.startsWith('Kuva ') || i.name.startsWith('Tenet '))
+    .map(i => i.name)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .sort();
+}
+function toggleElem(weapon, elem) {
+  if (!lichData[weapon]) lichData[weapon] = {};
+  lichData[weapon][elem] = !lichData[weapon][elem];
+  localStorage.setItem('wf_lich', JSON.stringify(lichData));
+  buildNav();
+  renderItems();
+}
+function renderLich() {
+  const weapons = getLichWeapons();
+  if (!weapons.length) { document.getElementById('content').innerHTML = '<div class="empty-state">No Kuva or Tenet weapons found in current data.</div>'; return; }
+  const html = `
+    <div class="cat-header">
+      <span class="cat-title">Lich Vault</span>
+      <div class="cat-divider"></div>
+      <span class="cat-stats">Track which elements you've obtained</span>
+    </div>
+    <div class="lich-list">
+      ${weapons.map(w => {
+        const owned = lichData[w] || {};
+        const badge = w.startsWith('Kuva ') ? '<span class="kuva-badge">KUVA</span>' : '<span class="tenet-badge">TENET</span>';
+        const dots = LICH_ELEMENTS.map(e => {
+          const cls = owned[e] ? 'owned' : '';
+          return `<span class="elem-dot ${cls}" onclick="toggleElem('${w.replace(/'/g,"\\'")}','${e}')">${e}</span>`;
+        }).join('');
+        return `<div class="lich-row">${badge}<span class="lich-name">${w}</span><div class="elem-wrap">${dots}</div></div>`;
+      }).join('')}
+    </div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderItems() {
+  if (activeCat === 'lich') { renderLich(); return; }
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  let items = getItems(activeCat);
+  if (search) items = items.filter(i => i.name.toLowerCase().includes(search));
+  if (activeFilter === 'mastered')   items = items.filter(i =>  mastered[i.id]);
+  if (activeFilter === 'unmastered') items = items.filter(i => !mastered[i.id]);
+
+  if (!items.length) {
+    document.getElementById('content').innerHTML = '<div class="empty-state">No items found.</div>';
+    return;
+  }
+
+  if (activeCat === 'all' && !search) {
+    let html = '';
+    for (const cat of CATS.slice(1)) {
+      const catItems = items.filter(i => i.cat === cat.key);
+      if (!catItems.length) continue;
+      const done = catItems.filter(i => mastered[i.id]).length;
+      html += `<div class="cat-header">
+        <span class="cat-title">${cat.label}</span>
+        <div class="cat-divider"></div>
+        <span class="cat-stats">${done} / ${catItems.length}</span>
+      </div>
+      <div class="item-grid">${catItems.map(cardHtml).join('')}</div>`;
+    }
+    document.getElementById('content').innerHTML = html;
+  } else {
+    const cat = CATS.find(c => c.key === activeCat) || { label: 'Results' };
+    const done = items.filter(i => mastered[i.id]).length;
+    document.getElementById('content').innerHTML = `
+      <div class="cat-header">
+        <span class="cat-title">${cat.label}</span>
+        <div class="cat-divider"></div>
+        <span class="cat-stats">${done} / ${items.length}</span>
+      </div>
+      <div class="item-grid">${items.map(cardHtml).join('')}</div>`;
+  }
+}
+
+function cardHtml(item) {
+  const done = mastered[item.id] ? 'mastered' : '';
+  const safeId = item.id.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const vBadge = item.vaulted ? '<span class="vaulted-badge">VAULT</span>' : '';
+  const wBadge = item.name.startsWith('Kuva ') ? '<span class="kuva-badge">KUVA</span>'
+               : item.name.startsWith('Tenet ') ? '<span class="tenet-badge">TENET</span>' : '';
+  return `<div class="item-card ${done}" onclick="toggle('${safeId}')">
+    <div class="cb">
+      <svg viewBox="0 0 12 12" fill="none">
+        <polyline points="1.5,6 4.5,9.5 10.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="item-name">${item.name}</span>
+    ${wBadge}${vBadge}
+  </div>`;
+}
+
+// ─── Mobile sidebar ───────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+// ─── Export / Import ──────────────────────────────────────────────────────────
+function exportData() {
+  const payload = { mastery: mastered, lich: lichData };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'wf-mastery-backup.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (parsed.mastery) { mastered = parsed.mastery; localStorage.setItem('wf_mastery3', JSON.stringify(mastered)); }
+      if (parsed.lich) { lichData = parsed.lich; localStorage.setItem('wf_lich', JSON.stringify(lichData)); }
+      buildNav(); renderItems();
+    } catch(err) { alert('Invalid backup file.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function toggle(id) {
+  mastered[id] = !mastered[id];
+  localStorage.setItem('wf_mastery3', JSON.stringify(mastered));
+  buildNav();
+  renderItems();
+}
+function setCategory(key) {
+  activeCat = key; buildNav(); renderItems();
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderItems();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
