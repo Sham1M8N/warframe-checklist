@@ -369,7 +369,7 @@ const LICH_ELEMENTS = ['Heat','Cold','Electric','Toxin','Radiation','Magnetic','
 const CATS = [
   { key: 'all',        label: 'All Items',   apiCat: null },
   { key: 'Warframes',  label: 'Warframes',   apiCat: 'Warframes' },
-  { key: 'Necramech',  label: 'Necramech',   apiCat: 'Warframes', uMatch: 'necramech' },
+  { key: 'Necramech',  label: 'Necramech',   apiCat: 'Warframes', uMatch: ['necramech', 'entratimech'] },
   { key: 'Primary',    label: 'Primary',     apiCat: 'Primary' },
   { key: 'Secondary',  label: 'Secondary',   apiCat: 'Secondary' },
   { key: 'Kitgun',     label: 'Kitgun',      apiCat: 'Secondary', uMatch: 'kitgun' },
@@ -467,7 +467,9 @@ function processApiData(raw) {
 
     const uLower = (item.uniqueName || '').toLowerCase();
     // Sub-categories checked first (they have uMatch), then parent category
-    const cat = candidates.find(c => c.uMatch ? uLower.includes(c.uMatch.toLowerCase()) : true);
+    const cat = candidates.find(c => c.uMatch
+      ? (Array.isArray(c.uMatch) ? c.uMatch.some(m => uLower.includes(m)) : uLower.includes(c.uMatch.toLowerCase()))
+      : true);
     if (!cat) continue;
     out[cat.key].push({ name: item.name, id: item.uniqueName || item.name, vaulted: item.vaulted === true });
   }
